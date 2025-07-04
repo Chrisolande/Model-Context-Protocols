@@ -81,6 +81,9 @@ class MCPClient:
         """Clear analysis cache"""
         return await self._call_tool("clear_analysis_cache")
 
+    async def call_search_in_file(self, file_path: str, search_term: str, case_sensitive: bool = False):
+        return await self._call_tool("search_in_file", {"file_path": file_path, "search_term": search_term, "case_sensitive": case_sensitive})
+
 async def main():
     import random
     client = MCPClient()
@@ -97,6 +100,9 @@ async def main():
     if Path(test_file).exists():
         analysis_result = await client.call_analyze_file(test_file)
         print(f"File Analysis: {json.dumps(analysis_result, indent=2)}")
+
+        search_result = await client.call_search_in_file(test_file, "model")
+        print(f"Search results: {json.dumps(search_result, indent=2)}")
 
     cache_result = await client.call_clear_cache()
     print(f"Cache Clear: {json.dumps(cache_result, indent=2)}")

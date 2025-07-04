@@ -164,6 +164,46 @@ async def analyze_file(file_path: str) -> Dict[str, Any]:
         return {"error": str(e)}
 
 @mcp.tool()
+async def search_in_file(file_path: str, search_term: str, case_sensitive: bool = False) -> Dict[str, Any]:
+    """Search for a term in a file"""
+    try:
+        path = Path(file_path)
+        if not path.exists():
+            return {"error": "File does not exist"}
+        
+        async with aiofiles.open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
+            content = await f.read()
+        
+        if not case_sensitive:
+            content_search = content.lower()
+            search_term = search_term.lower()
+        else:
+            content_search = content
+        
+        lines = content.splitlines()
+        matches = []
+        
+        for i, line in enumerate(lines, 1):
+            line_search = line.lower() if not case_sensitive else line
+            if search_term in line_search:
+                matches.append({
+                    "line_number": i,
+                    "line_content": line.strip(),
+                    "match_count": line_search.count(search_term)
+                })
+        
+        logger.info(f"Found {len(matches)} matches for '{search_term}' in {file_path}")
+        return {
+            "success": True,
+            "matches": matches,
+            "total_matches": len(matches)
+        }
+    
+    except Exception as e:
+        logger.error(f"Search error: {e}")
+        return {"error": str(e)}
+
+@mcp.tool()
 def clear_analysis_cache() -> Dict[str, Any]:
     """Clear the file analysis cache"""
     cache_size = len(analysis_cache)
