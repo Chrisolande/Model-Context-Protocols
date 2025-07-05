@@ -1,51 +1,55 @@
 # client.py
 import asyncio
+import json
 import logging
 from dataclasses import dataclass
-from typing import Dict, List, Any, Optional
-import json
 from pathlib import Path
-from mcp import ClientSession, StdioServerParameters, types
+from typing import Any
+
+from mcp import ClientSession, StdioServerParameters
 from mcp.client.stdio import stdio_client
 
 # Configure logging
 logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
+
 
 @dataclass
 class ClientConfig:
     command: str = "mcp"
-    args: List[str] = None
-    env: Optional[Dict[str, str]] = None
+    args: list[str] = None
+    env: dict[str, str] | None = None
     timeout: int = 30
 
     def __post_init__(self):
         if self.args is None:
             self.args = ["run", "server.py"]
 
+
 class MCPClient:
     def __init__(self, config: ClientConfig = None):
         self.config = config or ClientConfig()
         self.server_params = StdioServerParameters(
-            command = self.config.command,
-            args = self.config.args,
-            env = self.config.env
+            command=self.config.command, args=self.config.args, env=self.config.env
         )
         logger.info(f"Initialized MCP client with command: {self.config.command}")
 
     async def get_session(self):
         return stdio_client(self.server_params)
 
-    async def _call_tool(self, tool_name: str, arguments: Dict[str, Any] = None) -> Dict[str, Any]:
-        """Generic tool calling method"""
+    async def _call_tool(
+        self, tool_name: str, arguments: dict[str, Any] = None
+    ) -> dict[str, Any]:
+        """Generic tool calling method."""
         try:
             async with await self.get_session() as (read, write):
                 async with ClientSession(read, write) as session:
                     await session.initialize()
-                    result = await session.call_tool(tool_name, arguments=arguments or {})
+                    result = await session.call_tool(
+                        tool_name, arguments=arguments or {}
+                    )
                     logger.info(f"Tool '{tool_name}' call completed")
                     return json.loads(result.content[0].text) if result.content else {}
         except Exception as e:
@@ -53,7 +57,7 @@ class MCPClient:
             return {"error": str(e)}
 
     async def list_available_tools(self):
-        """List all available tools"""
+        """List all available tools."""
         try:
             async with await self.get_session() as (read, write):
                 async with ClientSession(read, write) as session:
@@ -73,19 +77,30 @@ class MCPClient:
     async def call_system_info(self):
         return await self._call_tool("get_system_info")
 
-    async def call_analyze_file(self, file_path: str) -> Dict[str, Any]:
-        """Analyze a file"""
+    async def call_analyze_file(self, file_path: str) -> dict[str, Any]:
+        """Analyze a file."""
         return await self._call_tool("analyze_file", {"file_path": file_path})
-    
-    async def call_clear_cache(self) -> Dict[str, Any]:
-        """Clear analysis cache"""
+
+    async def call_clear_cache(self) -> dict[str, Any]:
+        """Clear analysis cache."""
         return await self._call_tool("clear_analysis_cache")
 
-    async def call_search_in_file(self, file_path: str, search_term: str, case_sensitive: bool = False):
-        return await self._call_tool("search_in_file", {"file_path": file_path, "search_term": search_term, "case_sensitive": case_sensitive})
+    async def call_search_in_file(
+        self, file_path: str, search_term: str, case_sensitive: bool = False
+    ):
+        return await self._call_tool(
+            "search_in_file",
+            {
+                "file_path": file_path,
+                "search_term": search_term,
+                "case_sensitive": case_sensitive,
+            },
+        )
+
 
 async def main():
     import random
+
     client = MCPClient()
     tools = await client.list_available_tools()
     print(f"Available tools: {tools}")
@@ -106,6 +121,7 @@ async def main():
 
     cache_result = await client.call_clear_cache()
     print(f"Cache Clear: {json.dumps(cache_result, indent=2)}")
+
 
 if __name__ == "__main__":
     asyncio.run(main())
