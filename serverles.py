@@ -89,7 +89,7 @@ class SearchToolsManager:
             logger.info("Vector store initialized successfully")
 
         except Exception as e:
-            logger.error(f"Failed to initialize vector store: {str(e)}")
+            logger.error(f"Failed to initialize vector store: {e!s}")
 
     async def initialize_vector_store_async(self):
         """Initialize vector store with document processing (async)"""
@@ -132,7 +132,7 @@ class SearchToolsManager:
             logger.info("Vector store initialized successfully")
 
         except Exception as e:
-            logger.error(f"Failed to initialize vector store: {str(e)}")
+            logger.error(f"Failed to initialize vector store: {e!s}")
 
     def _process_documents(self):
         """Process documents for vector store."""
@@ -186,8 +186,8 @@ class SearchToolsManager:
             results = self.tavily_tool.invoke({"query": query})
             return str(results)
         except Exception as e:
-            logger.error(f"Web search error: {str(e)}")
-            return f"Web search failed: {str(e)}"
+            logger.error(f"Web search error: {e!s}")
+            return f"Web search failed: {e!s}"
 
     def search_documents(self, query: str) -> str:
         """Search local documents using vector retrieval."""
@@ -211,8 +211,8 @@ class SearchToolsManager:
             return formatted_results
 
         except Exception as e:
-            logger.error(f"Document search error: {str(e)}")
-            return f"Document search failed: {str(e)}"
+            logger.error(f"Document search error: {e!s}")
+            return f"Document search failed: {e!s}"
 
 
 # Initialize components
@@ -256,8 +256,8 @@ async def hybrid_search(query: str) -> str:
         return combined_results
 
     except Exception as e:
-        logger.error(f"Hybrid search error: {str(e)}")
-        return f"Hybrid search failed: {str(e)}"
+        logger.error(f"Hybrid search error: {e!s}")
+        return f"Hybrid search failed: {e!s}"
 
 
 def main():
